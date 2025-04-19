@@ -4,12 +4,86 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"text/template"
 
-	"github.com/Alwin18/gracft/internal/fs"
 	"github.com/spf13/cobra"
 )
 
 var configTemplates string
+
+func createTemplateFile(dst, templatePath, dstPath, moduleName string) error {
+	// Parsing template file
+	tmpl, err := template.ParseFiles(templatePath)
+	if err != nil {
+		return fmt.Errorf("gagal memparsing template: %v", err)
+	}
+
+	// Persiapkan data untuk template
+	data := struct {
+		ModuleName string
+	}{
+		ModuleName: moduleName,
+	}
+
+	// Tentukan file tujuan
+	dstFile := filepath.Join(dst, dstPath)
+
+	// ✅ Pastikan direktori tujuan tersedia
+	if err := os.MkdirAll(filepath.Dir(dstFile), 0755); err != nil {
+		return fmt.Errorf("gagal membuat direktori %s: %v", filepath.Dir(dstFile), err)
+	}
+
+	// Buat file
+	file, err := os.Create(dstFile)
+	if err != nil {
+		return fmt.Errorf("gagal membuat file %s: %v", dstPath, err)
+	}
+	defer file.Close()
+
+	// Eksekusi template dan tulis ke dalam file tujuan
+	if err := tmpl.Execute(file, data); err != nil {
+		return fmt.Errorf("gagal mengeksekusi template: %v", err)
+	}
+
+	fmt.Printf("✅ %s berhasil dibuat di: %s\n", dstPath, dstFile)
+	return nil
+}
+
+func renderTemplates(srcTemplate, dst, moduleName string) error {
+	return filepath.Walk(srcTemplate, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+
+		relPath, err := filepath.Rel(srcTemplate, path)
+		if err != nil {
+			return err
+		}
+
+		dstPath := filepath.Join(dst, relPath)
+
+		// Buat folder
+		if info.IsDir() {
+			return os.MkdirAll(dstPath, 0755)
+		}
+
+		// Kalau file .tmpl, render ke file .go (atau sejenis)
+		if filepath.Ext(path) == ".tmpl" {
+			dstPath = dstPath[:len(dstPath)-len(".tmpl")]
+			return createTemplateFile(dst, path, dstPath[len(dst)+1:], moduleName)
+		}
+
+		// Untuk file biasa (non-templating), salin langsung
+		input, err := os.ReadFile(path)
+		if err != nil {
+			return err
+		}
+		if err := os.MkdirAll(filepath.Dir(dstPath), 0755); err != nil {
+			return err
+		}
+		return os.WriteFile(dstPath, input, 0644)
+	})
+}
 
 func writeGoMod(projectPath, projectName string) error {
 	goModPath := filepath.Join(projectPath, "go.mod")
@@ -41,8 +115,10 @@ var createCmd = &cobra.Command{
 
 		// Salin template folder dasar
 		srcTemplate := filepath.Join("templates", "basic-go")
-		if err := fs.CopyDir(srcTemplate, dst); err != nil {
-			fmt.Println("❌ Gagal menyalin template:", err)
+
+		// Render semua .go.tmpl file di srcTemplate ke dst
+		if err := renderTemplates(srcTemplate, dst, projectName); err != nil {
+			fmt.Println("❌ Gagal merender templates:", err)
 			return
 		}
 
