@@ -98,6 +98,15 @@ var createCmd = &cobra.Command{
 			return
 		}
 
+		// Salin keseluruhan file internal
+		srcInternalDir := filepath.Join("templates", "snippets", "internal")
+		dstInternalDir := filepath.Join(dst, "internal")
+		fmt.Println("📁 Menyalin file internal")
+		if err := fs.CopyDir(srcInternalDir, dstInternalDir); err != nil {
+			fmt.Println("❌ Gagal menyalin file internal:", err)
+			return
+		}
+
 		// Generate go.mod sesuai nama project
 		if err := writeGoMod(dst, projectName); err != nil {
 			fmt.Println("❌ Gagal menulis go.mod:", err)
@@ -113,7 +122,6 @@ var createCmd = &cobra.Command{
 }
 
 func init() {
-	// Flag untuk memilih file konfigurasi yang ingin disertakan
 	createCmd.Flags().StringVar(&configTemplates, "with-config", "", "Daftar file konfigurasi yang ingin disertakan, pisahkan dengan koma (misalnya fiber,gorm)")
 	rootCmd.AddCommand(createCmd)
 }

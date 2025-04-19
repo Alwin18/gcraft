@@ -16,6 +16,7 @@ type Config struct {
 	SetMaxIdleConns string
 	SetMaxOpenConns string
 	SetMaxLifeTime  string
+	SSLMode         string
 }
 
 func LoadEnv() (*Config, error) {
@@ -30,6 +31,7 @@ func LoadEnv() (*Config, error) {
 		"SET_MAX_IDLE": &config.SetMaxIdleConns,
 		"SET_MAX_OPEN": &config.SetMaxOpenConns,
 		"SET_MAX_LIFE": &config.SetMaxLifeTime,
+		"SSLMODE":      &config.SSLMode,
 	}
 
 	for key, ptr := range envVars {
