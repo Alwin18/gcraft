@@ -11,7 +11,7 @@ import (
 
 type RouteConfig struct {
 	App         *fiber.App
-	HomeHandler *handlers.HomeHandler
+	UserHandler *handlers.UserHandler
 }
 
 func (c *RouteConfig) Setup() {
@@ -28,5 +28,5 @@ func (c *RouteConfig) Setup() {
 }
 
 func HomeRoute(c *RouteConfig, v1 fiber.Router) {
-	v1.Get("/home", c.HomeHandler.Index)
+	v1.Get("/users", c.UserHandler.GetListUsers)
 }
