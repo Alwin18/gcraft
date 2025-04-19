@@ -26,4 +26,4 @@ go.work.sum
 
 
 my-app
-.sh
+templates/basic-go/setup_template.sh
