@@ -104,7 +104,11 @@ var createCmd = &cobra.Command{
 			return
 		}
 
-		fmt.Println("✅ Proyek berhasil dibuat:", projectName)
+		fmt.Println("\n✅ Proyek berhasil dibuat di:", projectName)
+		fmt.Println("👉 Selanjutnya:")
+		fmt.Println("   cd", projectName)
+		fmt.Println("   go mod tidy   # untuk mengunduh semua dependencies")
+		fmt.Println("   go run main.go   # untuk menjalankan aplikasi")
 	},
 }
 
