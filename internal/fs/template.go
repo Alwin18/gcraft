@@ -106,3 +106,73 @@ func processFile(templateFS fs.FS, srcPath, targetPath string, data TemplateData
 	fmt.Printf("Created: %s\n", targetPath)
 	return nil
 }
+
+func CreateHandlerStructure(name string) error {
+	templateFS := templates.GetHandlerTemplate()
+
+	return fs.WalkDir(templateFS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip root directory
+		if path == "." {
+			return nil
+		}
+
+		if d.IsDir() {
+			// Create directory
+			return os.MkdirAll(path, 0755)
+		}
+
+		// Process file
+		return ProcessTemplateFile(templateFS, path, path, TemplateData{ProjectName: name})
+	})
+}
+
+func CreateServiceStructure(name string) error {
+	templateFS := templates.GetServiceTemplate()
+
+	return fs.WalkDir(templateFS, ".", func(path string, d fs.DirEntry, err error) error {
+		if err != nil {
+			return err
+		}
+
+		// Skip root directory
+		if path == "." {
+			return nil
+		}
+
+		if d.IsDir() {
+			// Create directory
+			return os.MkdirAll(path, 0755)
+		}
+
+		// Process file
+		return ProcessTemplateFile(templateFS, path, path, TemplateData{ProjectName: name})
+	})
+}
+
+func ProcessTemplateFile(fsys fs.FS, templatePath string, targetDir string, data TemplateData) error {
+	tmplBytes, err := fs.ReadFile(fsys, templatePath)
+	if err != nil {
+		return err
+	}
+
+	tmpl, err := template.New(filepath.Base(templatePath)).Parse(string(tmplBytes))
+	if err != nil {
+		return err
+	}
+
+	// Buat path baru dengan mengganti "template" menjadi data.ProjectName
+	fileName := strings.TrimSuffix(filepath.Base(templatePath), ".tmpl")
+	outputPath := filepath.Join(targetDir, fileName)
+
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	return tmpl.Execute(outFile, data)
+}
