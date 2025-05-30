@@ -9,6 +9,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var Version = "dev"
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print the version of gcraft",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("gcraft version %s\n", Version)
+	},
+}
+
 var createCmd = &cobra.Command{
 	Use:   "create [project-name]",
 	Short: "Create a new Go project from template",
@@ -49,4 +59,5 @@ var createCmd = &cobra.Command{
 func init() {
 	createCmd.Flags().StringP("module", "m", "", "Go module name (default: project name)")
 	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(versionCmd)
 }
