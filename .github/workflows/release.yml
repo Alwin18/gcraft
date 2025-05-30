@@ -11,10 +11,11 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
-    env:
-      VERSION: ${GITHUB_REF##*/}
     steps:
       - uses: actions/checkout@v3
+
+      - name: Extract version from tag
+        run: echo "VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
       - name: Build binary
         run: |
