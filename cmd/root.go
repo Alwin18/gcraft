@@ -6,6 +6,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func init() {
+	createCmd.Flags().StringP("module", "m", "", "Go module name (default: project name)")
+	rootCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(makeCmd)
+}
+
 var rootCmd = &cobra.Command{
 	Use:   "gcraft",
 	Short: "gcraft - Go project scaffolding CLI",

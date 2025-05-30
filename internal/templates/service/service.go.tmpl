@@ -1,0 +1,16 @@
+package {{.ProjectName}}
+
+import (
+	"github.com/gofiber/fiber/v2"
+	"gorm.io/gorm"
+)
+
+type {{.ProjectName}}Service struct {
+	db *gorm.DB
+}
+
+func NewUserService(db *gorm.DB) *{{.ProjectName}}Service {
+    return &{{.ProjectName}}Service{
+        db: db,
+    }
+}

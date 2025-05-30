@@ -1,0 +1,20 @@
+package handlers
+
+import (
+	service "{{.ModuleName}}/internal/service/{{.ProjectName}}"
+	"{{.ModuleName}}/internal/utils"
+	"github.com/go-playground/validator/v10"
+	"github.com/gofiber/fiber/v2"
+)
+
+type {{.ProjectName}}Handler struct {
+	{{.ProjectName}}Service *service.{{.ProjectName}}Service
+	validate    *validator.Validate
+}
+
+func New{{.ProjectName}}Handler({{.ProjectName}}Service *service.{{.ProjectName}}Service, validate *validator.Validate) *{{.ProjectName}}Handler {
+	return &{{.ProjectName}}Handler{
+		{{.ProjectName}}Service: {{.ProjectName}}Service,
+		validate:    validate,
+	}
+}
