@@ -1,7 +1,5 @@
-VERSION := $(shell git describe --tags --abbrev=0 2>/dev/null || echo "dev")
-
 build:
-	go build -ldflags="-X 'github.com/Alwin18/gcraft/cmd.Version=$(VERSION)'" -o gcraft
+	go build -o gcraft
 
 generate:
 	rm -rf my-app
