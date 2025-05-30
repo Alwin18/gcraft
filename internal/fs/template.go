@@ -17,6 +17,12 @@ type TemplateData struct {
 	// Tambahkan field lain sesuai kebutuhan
 }
 
+func writeGoMod(projectPath, projectName string) error {
+	goModPath := filepath.Join(projectPath, "go.mod")
+	content := fmt.Sprintf("module %s\n\ngo 1.23.0\n", projectName)
+	return os.WriteFile(goModPath, []byte(content), 0644)
+}
+
 // ProcessTemplate processes template files and creates project structure
 func ProcessTemplate(projectName, moduleName string) error {
 	templateFS := templates.GetBasicGoTemplate()
@@ -45,11 +51,11 @@ func ProcessTemplate(projectName, moduleName string) error {
 		}
 
 		// Process file
-		return processFile(templateFS, path, targetPath, data)
+		return processFile(templateFS, path, targetPath, data, projectName)
 	})
 }
 
-func processFile(templateFS fs.FS, srcPath, targetPath string, data TemplateData) error {
+func processFile(templateFS fs.FS, srcPath, targetPath string, data TemplateData, projectName string) error {
 	// Read template file
 	content, err := fs.ReadFile(templateFS, srcPath)
 	if err != nil {
@@ -89,6 +95,12 @@ func processFile(templateFS fs.FS, srcPath, targetPath string, data TemplateData
 		if err := os.WriteFile(targetPath, content, 0644); err != nil {
 			return fmt.Errorf("failed to write file %s: %w", targetPath, err)
 		}
+
+	}
+
+	if err := writeGoMod(filepath.Join(".", projectName), projectName); err != nil {
+		fmt.Println("❌ Gagal menulis go.mod:", err)
+		return err
 	}
 
 	fmt.Printf("Created: %s\n", targetPath)
