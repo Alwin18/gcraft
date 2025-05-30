@@ -11,19 +11,20 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    env:
+      VERSION: ${GITHUB_REF##*/}
     steps:
       - uses: actions/checkout@v3
 
-      - name: Get Version from Git tag
-        run: echo "VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
-
       - name: Build binary
         run: |
-          go build -ldflags="-X 'github.com/Alwin18/gcraft/cmd.Version=${{ env.VERSION }}'" -o gcraft
+          go build -ldflags="-X 'github.com/Alwin18/gcraft/cmd.Version=${VERSION}'" -o gcraft
 
       - name: Upload Release
         uses: softprops/action-gh-release@v1
         with:
-          name: Release ${{ env.VERSION }}
-          tag_name: ${{ env.VERSION }}
+          name: Release ${VERSION}
+          tag_name: ${VERSION}
           files: gcraft
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
