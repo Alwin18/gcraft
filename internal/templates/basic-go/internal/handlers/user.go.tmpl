@@ -1,18 +1,18 @@
 package handlers
 
 import (
-	"{{.ModuleName}}/internal/services/home"
+	service "{{.ModuleName}}/internal/service/user"
 	"{{.ModuleName}}/internal/utils"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 )
 
 type UserHandler struct {
-	userService *userservice.UserService
+	userService *service.UserService
 	validate    *validator.Validate
 }
 
-func NewUserHandler(userService *userservice.UserService, validate *validator.Validate) *UserHandler {
+func NewUserHandler(userService *service.UserService, validate *validator.Validate) *UserHandler {
 	return &UserHandler{
 		userService: userService,
 		validate:    validate,
