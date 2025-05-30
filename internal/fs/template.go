@@ -23,6 +23,27 @@ func writeGoMod(projectPath, projectName string) error {
 	return os.WriteFile(goModPath, []byte(content), 0644)
 }
 
+func GetModuleName() (string, error) {
+	goModPath := "go.mod"
+
+	// Baca file go.mod
+	content, err := os.ReadFile(goModPath)
+	if err != nil {
+		return "", fmt.Errorf("failed to read go.mod: %w", err)
+	}
+
+	// Cari baris yang dimulai dengan "module"
+	lines := strings.Split(string(content), "\n")
+	for _, line := range lines {
+		if strings.HasPrefix(line, "module ") {
+			// Ambil nama modul setelah "module"
+			return strings.TrimSpace(strings.TrimPrefix(line, "module ")), nil
+		}
+	}
+
+	return "", fmt.Errorf("module name not found in go.mod")
+}
+
 // ProcessTemplate processes template files and creates project structure
 func ProcessTemplate(projectName, moduleName string) error {
 	templateFS := templates.GetBasicGoTemplate()
@@ -121,12 +142,23 @@ func CreateHandlerStructure(name string) error {
 		}
 
 		if d.IsDir() {
-			// Create directory
-			return os.MkdirAll(path, 0755)
+			// Skip directories, as we only want to process files
+			return nil
 		}
 
-		// Process file
-		return ProcessTemplateFile(templateFS, path, path, TemplateData{ProjectName: name})
+		moduleName, err := GetModuleName()
+		if err != nil {
+			return fmt.Errorf("failed to get module name: %w", err)
+		}
+
+		// Define the target file path
+		targetFile := filepath.Join("internal", "handlers", fmt.Sprintf("%s.go", name))
+
+		// Process the template file
+		return ProcessTemplateFile(templateFS, path, targetFile, TemplateData{
+			ProjectName: name,
+			ModuleName:  moduleName,
+		})
 	})
 }
 
@@ -144,35 +176,54 @@ func CreateServiceStructure(name string) error {
 		}
 
 		if d.IsDir() {
-			// Create directory
-			return os.MkdirAll(path, 0755)
+			// Skip directories, as we only want to process files
+			return nil
 		}
 
-		// Process file
-		return ProcessTemplateFile(templateFS, path, path, TemplateData{ProjectName: name})
+		moduleName, err := GetModuleName()
+		if err != nil {
+			return fmt.Errorf("failed to get module name: %w", err)
+		}
+
+		// Define the target file path
+		targetFile := filepath.Join("internal", "services", fmt.Sprint(name), fmt.Sprintf("%s.go", name))
+
+		// Process the template file
+		return ProcessTemplateFile(templateFS, path, targetFile, TemplateData{
+			ProjectName: name,
+			ModuleName:  moduleName,
+		})
 	})
 }
 
-func ProcessTemplateFile(fsys fs.FS, templatePath string, targetDir string, data TemplateData) error {
+func ProcessTemplateFile(fsys fs.FS, templatePath string, targetFile string, data TemplateData) error {
+	fmt.Printf("Reading template: %s\n", templatePath)
 	tmplBytes, err := fs.ReadFile(fsys, templatePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to read template file %s: %w", templatePath, err)
 	}
 
 	tmpl, err := template.New(filepath.Base(templatePath)).Parse(string(tmplBytes))
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to parse template %s: %w", templatePath, err)
 	}
 
-	// Buat path baru dengan mengganti "template" menjadi data.ProjectName
-	fileName := strings.TrimSuffix(filepath.Base(templatePath), ".tmpl")
-	outputPath := filepath.Join(targetDir, fileName)
+	fmt.Printf("Creating directory: %s\n", filepath.Dir(targetFile))
+	if err := os.MkdirAll(filepath.Dir(targetFile), 0755); err != nil {
+		return fmt.Errorf("failed to create directory %s: %w", filepath.Dir(targetFile), err)
+	}
 
-	outFile, err := os.Create(outputPath)
+	fmt.Printf("Creating file: %s\n", targetFile)
+	outFile, err := os.Create(targetFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create file %s: %w", targetFile, err)
 	}
 	defer outFile.Close()
 
-	return tmpl.Execute(outFile, data)
+	fmt.Printf("Executing template: %s -> %s\n", templatePath, targetFile)
+	if err := tmpl.Execute(outFile, data); err != nil {
+		return fmt.Errorf("failed to execute template %s: %w", templatePath, err)
+	}
+
+	return nil
 }

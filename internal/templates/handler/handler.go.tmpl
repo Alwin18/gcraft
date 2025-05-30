@@ -13,7 +13,7 @@ type {{.ProjectName}}Handler struct {
 }
 
 func New{{.ProjectName}}Handler({{.ProjectName}}Service *service.{{.ProjectName}}Service, validate *validator.Validate) *{{.ProjectName}}Handler {
-	return &U{{.ProjectName}}Handler{
+	return &{{.ProjectName}}Handler{
 		{{.ProjectName}}Service: {{.ProjectName}}Service,
 		validate:    validate,
 	}

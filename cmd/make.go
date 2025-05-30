@@ -13,6 +13,6 @@ var makeCmd = &cobra.Command{
 		projectName := args[0]
 
 		fs.CreateHandlerStructure(projectName)
-		// fs.CreateServiceStructure(projectName)
+		fs.CreateServiceStructure(projectName)
 	},
 }
