@@ -1,7 +1,81 @@
 package main
 
-import "fmt"
+import (
+	"context"
+	"fmt"
+	"{{.ModuleName}}/config"
+	"os"
+	"os/signal"
+	"syscall"
+
+	"github.com/gofiber/fiber/v2"
+	"github.com/joho/godotenv"
+	log "github.com/sirupsen/logrus"
+)
 
 func main() {
-	fmt.Println("Hello from {{.ModuleName}} project!")
+	// cancellation signal to goroutines using the given context
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("Application panicked: %v", r)
+		}
+	}()
+
+	// Load environment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Warnf("Error loading .env file")
+	}
+
+	// Load config
+	cfg, err := config.LoadEnv()
+	if err != nil {
+		panic(err)
+	}
+
+	validate := config.NewValidator(cfg)
+	log := config.NewLogger(cfg)
+	db := config.NewDatabase(cfg, log)
+	app := config.NewFiber(cfg)
+
+	// application bootstrap
+	config.Bootstrap(&config.BootstrapConfig{
+		DB:       db,
+		App:      app,
+		Log:      log,
+		Validate: validate,
+	})
+
+	serverErrors := make(chan error, 1)
+	go startServer(app, ":"+cfg.ServerPort, serverErrors)
+	handleGracefulShutdown(ctx, app, serverErrors)
+}
+
+func startServer(app *fiber.App, address string, errs chan<- error) {
+	if err := app.Listen(address); err != nil {
+		errs <- fmt.Errorf("error starting server: %w", err)
+	}
+	log.Info("Server started")
+}
+
+func handleGracefulShutdown(ctx context.Context, app *fiber.App, serverErrors <-chan error) {
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt, syscall.SIGTERM)
+
+	select {
+	case err := <-serverErrors:
+		log.Fatalf("Server error: %v", err)
+	case <-quit:
+		log.Info("Shutting down server...")
+		if err := app.Shutdown(); err != nil {
+			log.Fatalf("Error during server shutdown: %v", err)
+		}
+	case <-ctx.Done():
+		log.Info("Server exiting due to context cancellation")
+	}
+
+	log.Info("Server exited")
 }

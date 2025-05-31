@@ -1,6 +1,8 @@
 package user
 
 import (
+	"{{.ModuleName}}/internal/models"
+
 	"github.com/gofiber/fiber/v2"
 	"gorm.io/gorm"
 )
@@ -10,12 +12,26 @@ type UserService struct {
 }
 
 func NewUserService(db *gorm.DB) *UserService {
-    return &UserService{
-        db: db,
-    }
+	return &UserService{
+		db: db,
+	}
 }
 
 func (s *UserService) GetListUsers(ctx *fiber.Ctx) ([]GetListUsers, error) {
-    var result []GetListUsers
-    return result, nil
+	var result []GetListUsers
+	var users []models.User
+
+	if err := s.db.Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	for _, v := range users {
+		result = append(result, GetListUsers{
+			ID:    v.ID,
+			Name:  v.Name,
+			Email: v.Email,
+		})
+	}
+
+	return result, nil
 }

@@ -1,6 +1,9 @@
 package config
 
 import (
+	"{{.ModuleName}}/internal/routes"
+	"{{.ModuleName}}/internal/services/user"
+	"{{.ModuleName}}/internal/handlers"
 	"github.com/go-playground/validator/v10"
 	"github.com/gofiber/fiber/v2"
 	"github.com/sirupsen/logrus"
@@ -16,5 +19,16 @@ type BootstrapConfig struct {
 }
 
 func Bootstrap(cfg *BootstrapConfig) {
-	// TODO: Implement Bootstrap
+	// initiate service
+	userService := user.NewUserService(cfg.DB)
+
+	// initiate handlers
+	userHandler := handlers.NewUserHandler(userService, cfg.Validate)
+
+	routeConfig := routes.RouteConfig{
+		App:         cfg.App,
+		UserHandler: userHandler,
+	}
+
+	routeConfig.Setup()
 }

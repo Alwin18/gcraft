@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"log"
+	"{{.ModuleName}}/internal/models"
 	"strconv"
 	"time"
 
@@ -55,6 +56,8 @@ func NewDatabase(cfg *Config, log *logrus.Logger) *gorm.DB {
 	connection.SetMaxIdleConns(maxIdleConns)
 	connection.SetMaxOpenConns(MaxOpenConns)
 	connection.SetConnMaxLifetime(time.Second * time.Duration(maxLifeTimeConnection))
+
+	db.AutoMigrate(&models.User{})
 
 	return db
 }
