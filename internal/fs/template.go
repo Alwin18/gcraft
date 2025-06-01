@@ -197,6 +197,9 @@ func CreateServiceStructure(name string) error {
 }
 
 func ProcessTemplateFile(fsys fs.FS, templatePath string, targetFile string, data TemplateData) error {
+	// Convert target file path to lowercase
+	targetFile = strings.ToLower(targetFile)
+
 	fmt.Printf("Reading template: %s\n", templatePath)
 	tmplBytes, err := fs.ReadFile(fsys, templatePath)
 	if err != nil {
@@ -220,10 +223,20 @@ func ProcessTemplateFile(fsys fs.FS, templatePath string, targetFile string, dat
 	}
 	defer outFile.Close()
 
+	// Capitalize the first letter of each word in the template data fields
+	data.ProjectName = CapitalizeFirst(data.ProjectName)
+
 	fmt.Printf("Executing template: %s -> %s\n", templatePath, targetFile)
 	if err := tmpl.Execute(outFile, data); err != nil {
 		return fmt.Errorf("failed to execute template %s: %w", templatePath, err)
 	}
 
 	return nil
+}
+
+func CapitalizeFirst(s string) string {
+	if len(s) == 0 {
+		return s
+	}
+	return strings.ToUpper(s[:1]) + s[1:]
 }
