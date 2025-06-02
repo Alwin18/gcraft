@@ -12,8 +12,9 @@ import (
 )
 
 type TemplateData struct {
-	ProjectName string
-	ModuleName  string
+	ProjectName      string
+	ModuleName       string
+	ProjectNameLower string
 	// Tambahkan field lain sesuai kebutuhan
 }
 
@@ -154,10 +155,13 @@ func CreateHandlerStructure(name string) error {
 		// Define the target file path
 		targetFile := filepath.Join("internal", "handlers", fmt.Sprintf("%s.go", name))
 
+		projectName := strings.ToLower(name)
+
 		// Process the template file
 		return ProcessTemplateFile(templateFS, path, targetFile, TemplateData{
-			ProjectName: name,
-			ModuleName:  moduleName,
+			ProjectName:      name,
+			ModuleName:       moduleName,
+			ProjectNameLower: projectName,
 		})
 	})
 }
