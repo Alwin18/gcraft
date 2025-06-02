@@ -17,8 +17,7 @@ go install github.com/Alwin18/gcraft@latest
 ```bash
 git clone https://github.com/username/gcraft.git
 cd gcraft
-go build -o gcraft
-sudo mv gcraft /usr/local/bin/
+make all && cd my-app
 ```
 
 ## Usage
@@ -33,3 +32,4 @@ go run cmd/main.go
 ## Commands
 1. --help
 2. create
+3. version
